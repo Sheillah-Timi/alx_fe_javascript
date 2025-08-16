@@ -139,3 +139,64 @@ if (lastQuote) {
   document.getElementById("quoteDisplay").innerHTML =
     `"${lastQuote.text}" <br><em>Category: ${lastQuote.category}</em>`;
 }
+
+// Simulated server URL (mock)
+const SERVER_URL = "https://jsonplaceholder.typicode.com/posts"; // placeholder endpoint
+
+// Function to fetch "server data"
+async function fetchServerQuotes() {
+  try {
+    const response = await fetch(SERVER_URL);
+    const serverData = await response.json();
+
+    // Transform server data to match quote structure for simulation
+    const serverQuotes = serverData.slice(0, 5).map(item => ({
+      text: item.title,
+      category: item.body || "Server"
+    }));
+
+    resolveConflicts(serverQuotes);
+
+  } catch (err) {
+    console.error("Failed to fetch server data:", err);
+  }
+}
+
+// Conflict resolution: server takes precedence
+function resolveConflicts(serverQuotes) {
+  let newQuotesAdded = false;
+
+  serverQuotes.forEach(serverQuote => {
+    const exists = quotes.some(localQuote => 
+      localQuote.text === serverQuote.text && localQuote.category === serverQuote.category
+    );
+    if (!exists) {
+      quotes.push(serverQuote);
+      newQuotesAdded = true;
+    }
+  });
+
+  if (newQuotesAdded) {
+    saveQuotes();
+    populateCategories();
+    alert("Quotes updated from server! New quotes have been added.");
+  }
+}
+
+// Function to "sync" local data to server (simulation)
+async function syncToServer() {
+  try {
+    for (const quote of quotes) {
+      await fetch(SERVER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(quote)
+      });
+    }
+  } catch (err) {
+    console.error("Failed to sync to server:", err);
+  }
+}
+
+// Periodically fetch server updates every 60 seconds
+setInterval(fetchServerQuotes, 60000); // 60,000 ms = 1 minute
