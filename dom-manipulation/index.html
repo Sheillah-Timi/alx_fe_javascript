@@ -2,35 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Random Quote Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Quote Generator</title>
 </head>
 <body>
-  <h1>Random Quote Generator</h1>
+  <h1>Dynamic Quote Generator</h1>
 
-  <!-- Where the quotes will show -->
-  <p id="quoteDisplay">Click the button to see a quote.</p>
+  <!-- Quote Display -->
+  <div id="quoteDisplay"></div>
 
-  <!-- Button to trigger new quote -->
-  <button id="newQuoteBtn">Show New Quote</button>
+  <!-- Button to show random quote -->
+  <button id="newQuote">Show New Quote</button>
 
-  <!-- Optional inputs to add a new quote -->
-  <h2>Add a New Quote</h2>
-  <input type="text" id="quoteText" placeholder="Quote text">
-  <input type="text" id="quoteCategory" placeholder="Quote category">
-  <button id="addQuoteBtn">Add Quote</button>
+  <!-- Form to add a new quote -->
+  <div>
+    <input id="newQuoteText" type="text" placeholder="Enter a new quote" />
+    <input id="newQuoteCategory" type="text" placeholder="Enter quote category" />
+    <button onclick="addQuote()">Add Quote</button>
+  </div>
 
   <script src="script.js"></script>
-  <script>
-    // Hook up the Add Quote button to the addQuote function
-    document.getElementById("addQuoteBtn").addEventListener("click", function () {
-      const text = document.getElementById("quoteText").value;
-      const category = document.getElementById("quoteCategory").value;
-      if (text && category) {
-        addQuote(text, category);
-        document.getElementById("quoteText").value = "";
-        document.getElementById("quoteCategory").value = "";
-      }
-    });
-  </script>
 </body>
 </html>
