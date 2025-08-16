@@ -22,7 +22,6 @@ function showRandomQuote() {
   const quote = filteredQuotes[randomIndex];
   document.getElementById("quoteDisplay").innerHTML =
     `"${quote.text}" <br><em>Category: ${quote.category}</em>`;
-  
   sessionStorage.setItem("lastQuote", JSON.stringify(quote));
 }
 
@@ -30,7 +29,6 @@ function showRandomQuote() {
 function addQuote() {
   const newText = document.getElementById("newQuoteText").value.trim();
   const newCategory = document.getElementById("newQuoteCategory").value.trim();
-
   if (newText && newCategory) {
     quotes.push({ text: newText, category: newCategory });
     saveQuotes();
@@ -46,6 +44,7 @@ function addQuote() {
 // ====== CREATE ADD QUOTE FORM ======
 function createAddQuoteForm() {
   const container = document.getElementById("formContainer");
+  container.innerHTML = "";
 
   const inputText = document.createElement("input");
   inputText.id = "newQuoteText";
@@ -72,7 +71,6 @@ function populateCategories() {
   const lastSelected = localStorage.getItem("lastCategory") || "all";
 
   select.innerHTML = '<option value="all">All Categories</option>';
-
   const uniqueCategories = [...new Set(quotes.map(q => q.category))];
   uniqueCategories.forEach(cat => {
     const option = document.createElement("option");
@@ -123,40 +121,39 @@ function importFromJsonFile(event) {
   fileReader.readAsText(event.target.files[0]);
 }
 
-// ====== SERVER SYNC & CONFLICT RESOLUTION ======
-const SERVER_URL = "https://jsonplaceholder.typicode.com/posts"; // Mock server
+// ====== SERVER SYNC ======
+const SERVER_URL = "https://jsonplaceholder.typicode.com/posts"; // Mock API
 
-async function fetchServerQuotes() {
+async function fetchQuotesFromServer() {
   try {
     const response = await fetch(SERVER_URL);
     const serverData = await response.json();
+
     const serverQuotes = serverData.slice(0,5).map(item => ({
       text: item.title,
       category: item.body || "Server"
     }));
-    resolveConflicts(serverQuotes);
-  } catch(err) {
-    console.error("Server fetch failed:", err);
-  }
-}
 
-function resolveConflicts(serverQuotes) {
-  let newQuotes = false;
-  serverQuotes.forEach(sq => {
-    const exists = quotes.some(lq => lq.text === sq.text && lq.category === sq.category);
-    if (!exists) {
-      quotes.push(sq);
-      newQuotes = true;
+    let newQuotes = false;
+    serverQuotes.forEach(sq => {
+      const exists = quotes.some(lq => lq.text === sq.text && lq.category === sq.category);
+      if (!exists) {
+        quotes.push(sq);
+        newQuotes = true;
+      }
+    });
+
+    if (newQuotes) {
+      saveQuotes();
+      populateCategories();
+      alert("Quotes updated from server!");
     }
-  });
-  if (newQuotes) {
-    saveQuotes();
-    populateCategories();
-    alert("Quotes updated from server!");
+  } catch(err) {
+    console.error("Failed to fetch from server:", err);
   }
 }
 
-async function syncToServer() {
+async function syncQuotes() {
   try {
     for (const quote of quotes) {
       await fetch(SERVER_URL, {
@@ -166,23 +163,26 @@ async function syncToServer() {
       });
     }
   } catch(err) {
-    console.error("Server sync failed:", err);
+    console.error("Failed to sync quotes to server:", err);
   }
 }
 
-setInterval(fetchServerQuotes, 60000); // auto fetch every 1 min
+// Periodic server check
+setInterval(fetchQuotesFromServer, 60000);
 
 // ====== INITIALIZE ======
 createAddQuoteForm();
 populateCategories();
 document.getElementById("newQuote").addEventListener("click", showRandomQuote);
+document.getElementById("categoryFilter").addEventListener("change", filterQuotes);
 document.getElementById("exportJson").addEventListener("click", exportToJsonFile);
 document.getElementById("importFile").addEventListener("change", importFromJsonFile);
 document.getElementById("syncServer").addEventListener("click", () => {
-  fetchServerQuotes();
-  syncToServer();
+  fetchQuotesFromServer();
+  syncQuotes();
 });
 
+// Load last quote
 const lastQuote = JSON.parse(sessionStorage.getItem("lastQuote"));
 if (lastQuote) {
   document.getElementById("quoteDisplay").innerHTML =
